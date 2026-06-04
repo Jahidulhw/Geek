@@ -4,7 +4,7 @@ import axios from 'axios'
 import DrugCard from '../components/DrugCard'
 import styles from './Search.module.css'
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+const API = import.meta.env.VITE_API_URL ?? ''
 
 function SkeletonCard() {
   return (

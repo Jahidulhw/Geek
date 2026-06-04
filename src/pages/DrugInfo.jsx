@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import AuthModal from '../components/AuthModal'
 import PillCanvas from '../components/PillCanvas'
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5001'
+const API = import.meta.env.VITE_API_URL ?? ''
 
 const SECTIONS = [
   { key: 'purpose',      label: 'What is it?',       emoji: '💊' },
