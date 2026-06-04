@@ -89,7 +89,8 @@ function DrugInfo() {
   const [error, setError]           = useState(null)
   const [explanations, setExplanations] = useState({})
   const [loadingExpl, setLoadingExpl]   = useState(false)
-  const [savingMed, setSavingMed]       = useState(false)
+  const [savingMed, setSavingMed]         = useState(false)
+  const [saveError, setSaveError]         = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => {
@@ -161,18 +162,28 @@ function DrugInfo() {
               <p className={styles.generic}>{drug.genericName}</p>
             </div>
           </div>
-          <button
-            className={`${styles.addBtn} ${drug && isSaved(drug.id) ? styles.addBtnSaved : ''}`}
-            onClick={async () => {
-              if (!user) { setAuthModalOpen(true); return }
-              if (isSaved(drug.id)) return
-              setSavingMed(true)
-              try { await addMed(drug) } finally { setSavingMed(false) }
-            }}
-            disabled={savingMed || (drug && isSaved(drug.id))}
-          >
-            {savingMed ? 'Saving…' : drug && isSaved(drug.id) ? '✓ Saved' : '+ My Meds'}
-          </button>
+          <div className={styles.addWrap}>
+            <button
+              className={`${styles.addBtn} ${isSaved(drug.id) ? styles.addBtnAdded : ''}`}
+              onClick={async () => {
+                if (!user) { setAuthModalOpen(true); return }
+                if (isSaved(drug.id)) return
+                setSavingMed(true)
+                setSaveError(null)
+                try {
+                  await addMed(drug)
+                } catch (err) {
+                  setSaveError(err.response?.data?.error || 'Could not save — try signing in again')
+                } finally {
+                  setSavingMed(false)
+                }
+              }}
+              disabled={savingMed || isSaved(drug.id)}
+            >
+              {savingMed ? 'Saving…' : isSaved(drug.id) ? '✓ Added' : '+ My Meds'}
+            </button>
+            {saveError && <p className={styles.saveError}>{saveError}</p>}
+          </div>
         </div>
         {drug.manufacturer && (
           <span className={styles.mfrTag}>{drug.manufacturer}</span>
