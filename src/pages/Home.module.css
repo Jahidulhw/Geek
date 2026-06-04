@@ -16,12 +16,11 @@
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
-  padding: 72px 24px 80px;
+  padding: 56px 20px 40px;
 }
 
 @media (min-width: 768px) {
   .hero {
-    /* desktop: 56px navbar + 60px so the large clamp heading is never clipped */
     padding: 116px 40px 80px;
     justify-content: center;
   }
@@ -175,9 +174,9 @@
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--gray);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  padding: 7px 18px;
+  padding: 5px 12px;
   border-radius: 999px;
   transition: color 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
@@ -186,6 +185,13 @@
 .pill:hover {
   color: var(--white);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (min-width: 768px) {
+  .pill {
+    font-size: 0.8rem;
+    padding: 7px 18px;
+  }
 }
 
 /* ── Stats bar ── */

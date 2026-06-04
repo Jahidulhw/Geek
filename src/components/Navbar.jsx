@@ -143,13 +143,13 @@ export default function Navbar() {
 
           {/* Right */}
           <div className={`${styles.side} ${styles.sideRight}`}>
-            <Link to="/saved" className={styles.iconBtn} aria-label="Saved">
+            <Link to="/saved" className={`${styles.iconBtn} ${styles.desktopOnly}`} aria-label="Saved">
               <IconBookmark />
             </Link>
 
             <UserButton onOpenModal={() => setAuthModal(true)} />
 
-            <Link to="/my-meds" className={styles.iconBtn} aria-label="My Meds">
+            <Link to="/my-meds" className={`${styles.iconBtn} ${styles.desktopOnly}`} aria-label="My Meds">
               <IconCapsule />
             </Link>
           </div>
