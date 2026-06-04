@@ -24,9 +24,20 @@
 
 .headerTop {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headerNames {
+  min-width: 0;
 }
 
 .name {
@@ -57,8 +68,14 @@
   margin-top: 4px;
 }
 
-.addBtn:hover  { opacity: 0.85; }
-.addBtn:active { transform: scale(0.97); }
+.addBtn:hover:not(:disabled)  { opacity: 0.85; }
+.addBtn:active:not(:disabled) { transform: scale(0.97); }
+
+.addBtnSaved {
+  background: var(--surface2);
+  color: var(--gray);
+  border: 1px solid var(--border);
+}
 
 .mfrTag {
   display: inline-block;

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import styles from './DrugInfo.module.css'
+import { useAuth } from '../contexts/AuthContext'
+import AuthModal from '../components/AuthModal'
+import PillCanvas from '../components/PillCanvas'
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5001'
 
@@ -80,11 +83,14 @@ function SkeletonHeader() {
 function DrugInfo() {
   const { id }       = useParams()
   const navigate     = useNavigate()
+  const { user, addMed, isSaved } = useAuth()
   const [drug, setDrug]             = useState(null)
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
   const [explanations, setExplanations] = useState({})
   const [loadingExpl, setLoadingExpl]   = useState(false)
+  const [savingMed, setSavingMed]       = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -148,11 +154,25 @@ function DrugInfo() {
 
       <div className={styles.header}>
         <div className={styles.headerTop}>
-          <div>
-            <h1 className={styles.name}>{drug.brandName}</h1>
-            <p className={styles.generic}>{drug.genericName}</p>
+          <div className={styles.headerLeft}>
+            <PillCanvas drugName={drug.brandName} genericName={drug.genericName} size={110} />
+            <div className={styles.headerNames}>
+              <h1 className={styles.name}>{drug.brandName}</h1>
+              <p className={styles.generic}>{drug.genericName}</p>
+            </div>
           </div>
-          <button className={styles.addBtn}>+ My Meds</button>
+          <button
+            className={`${styles.addBtn} ${drug && isSaved(drug.id) ? styles.addBtnSaved : ''}`}
+            onClick={async () => {
+              if (!user) { setAuthModalOpen(true); return }
+              if (isSaved(drug.id)) return
+              setSavingMed(true)
+              try { await addMed(drug) } finally { setSavingMed(false) }
+            }}
+            disabled={savingMed || (drug && isSaved(drug.id))}
+          >
+            {savingMed ? 'Saving…' : drug && isSaved(drug.id) ? '✓ Saved' : '+ My Meds'}
+          </button>
         </div>
         {drug.manufacturer && (
           <span className={styles.mfrTag}>{drug.manufacturer}</span>
@@ -172,6 +192,8 @@ function DrugInfo() {
           />
         ))}
       </div>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </div>
   )
 }

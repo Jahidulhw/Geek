@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import axios from 'axios'
 import styles from './Home.module.css'
 import FloatingPills from '../components/FloatingPills'
+
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5001'
 
 const CATEGORIES = [
   { label: 'Pain & Fever',            drugs: ['Ibuprofen', 'Acetaminophen', 'Aspirin', 'Naproxen', 'Tramadol'] },
@@ -19,14 +22,6 @@ const FEATURES = [
   { num: '04', title: 'AI Explanations',     desc: 'Ask anything about a drug in plain English. Get a straight answer.',           to: '/search?mode=ai'  },
 ]
 
-const TRENDING = [
-  { icon: '💊', name: 'Adderall',   generic: 'Amphetamine',        tags: ['ADHD', 'Stimulant']       },
-  { icon: '🔵', name: 'Zoloft',     generic: 'Sertraline',         tags: ['Antidepressant', 'SSRI']   },
-  { icon: '💉', name: 'Ozempic',    generic: 'Semaglutide',        tags: ['Diabetes', 'Weight Loss']  },
-  { icon: '🟡', name: 'Xanax',      generic: 'Alprazolam',         tags: ['Anxiety', 'Benzodiazepine']},
-  { icon: '🟢', name: 'Lexapro',    generic: 'Escitalopram',       tags: ['Antidepressant', 'SSRI']   },
-  { icon: '🔴', name: 'Ibuprofen',  generic: 'Ibuprofen',          tags: ['Pain Relief', 'NSAID']     },
-]
 
 function SectionDivider({ label }) {
   return (
@@ -37,9 +32,71 @@ function SectionDivider({ label }) {
   )
 }
 
+// Curated medicine/pharmacy Unsplash photos — used when an article has no image
+// or when the article's image URL fails to load.
+const FALLBACK_IMGS = [
+  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=520&h=280&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=520&h=280&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1550831107-1553da8c8464?w=520&h=280&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=520&h=280&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=520&h=280&fit=crop&auto=format',
+  'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=520&h=280&fit=crop&auto=format',
+]
+
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const h = Math.floor(diff / 3600000)
+  if (h < 1) return 'Just now'
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
+
+function NewsCard({ article, index }) {
+  const fallback = FALLBACK_IMGS[index % FALLBACK_IMGS.length]
+  const [src, setSrc] = useState(article.urlToImage || fallback)
+
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.newsCard}
+    >
+      <div className={styles.newsThumb}>
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          className={styles.newsImg}
+          onError={() => setSrc(fallback)}
+        />
+      </div>
+      <div className={styles.newsBody}>
+        <p className={styles.newsMeta}>
+          <span className={styles.newsSource}>{article.source}</span>
+          <span className={styles.newsDot}>·</span>
+          <span className={styles.newsTime}>{timeAgo(article.publishedAt)}</span>
+        </p>
+        <h3 className={styles.newsTitle}>{article.title}</h3>
+      </div>
+    </a>
+  )
+}
+
 function Home() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
+  const [news, setNews]         = useState([])
+  const [newsLoading, setNewsLoading] = useState(true)
+
+  const MED_WORDS = /drug|medication|medicine|fda|pill|prescription|treatment|vaccine|therapy|dose/i
+
+  useEffect(() => {
+    axios.get(`${API}/api/news`)
+      .then(({ data }) => setNews(data.filter(a => MED_WORDS.test(a.title))))
+      .catch(() => setNews([]))
+      .finally(() => setNewsLoading(false))
+  }, [])
 
   function handleSearch(e) {
     e.preventDefault()
@@ -64,6 +121,8 @@ function Home() {
             Geek<span className={styles.dot}>.</span>
           </h1>
 
+
+          <p className={styles.subtitle}>Know your meds. Track your meds.</p>
 
           <form className={styles.searchForm} onSubmit={handleSearch}>
             <input
@@ -118,29 +177,29 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Trending ── */}
+      {/* ── Drug News ── */}
       <section className={styles.section}>
-        <SectionDivider label="◆ Trending" />
-        <div className={styles.grid}>
-          {TRENDING.map(({ icon, name, generic, tags }) => (
-            <Link
-              key={name}
-              to={`/drug/${name.toLowerCase()}`}
-              className={styles.card}
-            >
-              <span className={styles.cardIcon}>{icon}</span>
-              <div className={styles.cardBody}>
-                <h3 className={styles.cardName}>{name}</h3>
-                <p className={styles.cardGeneric}>{generic}</p>
-                <div className={styles.cardTags}>
-                  {tags.map(tag => (
-                    <span key={tag} className={styles.cardTag}>{tag}</span>
-                  ))}
+        <SectionDivider label="◆ Drug News" />
+        {newsLoading ? (
+          <div className={styles.newsRow}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={styles.newsSkeleton}>
+                <div className={`${styles.skPulse} ${styles.skNewsThumb}`} />
+                <div className={styles.skNewsBody}>
+                  <div className={`${styles.skPulse} ${styles.skNewsLine1}`} />
+                  <div className={`${styles.skPulse} ${styles.skNewsLine2}`} />
+                  <div className={`${styles.skPulse} ${styles.skNewsLine3}`} />
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.newsRow}>
+            {news.map((article, i) => (
+              <NewsCard key={i} article={article} index={i} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── Footer ── */}

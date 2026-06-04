@@ -7,6 +7,7 @@ import Search from './pages/Search'
 import DrugInfo from './pages/DrugInfo'
 import InteractionChecker from './pages/InteractionChecker'
 import MyMeds from './pages/MyMeds'
+import About from './pages/About'
 import styles from './App.module.css'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Route path="/drug/:id"     element={<DrugInfo />} />
             <Route path="/interactions" element={<InteractionChecker />} />
             <Route path="/my-meds"      element={<MyMeds />} />
+            <Route path="/about"        element={<About />} />
           </Routes>
         </main>
         <BottomNav />

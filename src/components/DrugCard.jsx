@@ -9,10 +9,7 @@ function DrugCard({ drug }) {
         <h3 className={styles.name}>{drug.brandName}</h3>
         <p className={styles.generic}>{drug.genericName}</p>
         {drug.purpose && (
-          <p className={styles.purpose}>{drug.purpose.slice(0, 120)}{drug.purpose.length > 120 ? '…' : ''}</p>
-        )}
-        {drug.manufacturer && (
-          <span className={styles.mfr}>{drug.manufacturer}</span>
+          <p className={styles.purpose}>{drug.purpose}</p>
         )}
       </div>
       <span className={styles.arrow}>→</span>

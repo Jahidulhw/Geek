@@ -3,6 +3,19 @@ import { Router } from 'express'
 const router = Router()
 const FDA_BASE = 'https://api.fda.gov/drug/label.json'
 
+// Strip FDA section-number headers and return the first real sentence.
+function cleanPurpose(raw) {
+  if (!raw) return ''
+  const text = raw
+    .replace(/^\d+(\.\d+)*\s+(INDICATIONS AND USAGE|INDICATIONS|PURPOSE)\s*/i, '')
+    .replace(/^(INDICATIONS AND USAGE|INDICATIONS|PURPOSE)\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const sentence = text.match(/^[^.!?]+[.!?]/)
+  if (sentence) return sentence[0].trim()
+  return text.slice(0, 120) + (text.length > 120 ? '…' : '')
+}
+
 function mapLabel(item) {
   const openfda = item.openfda ?? {}
   return {
@@ -10,7 +23,7 @@ function mapLabel(item) {
     brandName:    openfda.brand_name?.[0]          ?? 'Unknown',
     genericName:  openfda.generic_name?.[0]        ?? 'Unknown',
     manufacturer: openfda.manufacturer_name?.[0]   ?? '',
-    purpose:      item.purpose?.[0]                ?? item.indications_and_usage?.[0] ?? '',
+    purpose:      cleanPurpose(item.purpose?.[0] ?? item.indications_and_usage?.[0] ?? ''),
     dosage:       item.dosage_and_administration?.[0] ?? '',
     warnings:     item.warnings?.[0]               ?? item.warnings_and_cautions?.[0] ?? '',
     sideEffects:  item.adverse_reactions?.[0]      ?? '',
@@ -18,17 +31,29 @@ function mapLabel(item) {
   }
 }
 
+// Keep only the first result per generic name so duplicates from multiple
+// manufacturers collapse into one card.
+function dedupe(items) {
+  const seen = new Set()
+  return items.filter(item => {
+    const key = item.genericName.toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 router.get('/', async (req, res) => {
   const { q } = req.query
   if (!q?.trim()) return res.json([])
 
   try {
-    const url = `${FDA_BASE}?search=openfda.brand_name:"${encodeURIComponent(q.trim())}"&limit=10`
+    const url = `${FDA_BASE}?search=openfda.brand_name:"${encodeURIComponent(q.trim())}"&limit=20`
     const response = await fetch(url)
     if (response.status === 404) return res.json([])
     if (!response.ok) throw new Error(`FDA API ${response.status}`)
     const data = await response.json()
-    res.json((data.results ?? []).map(mapLabel))
+    res.json(dedupe((data.results ?? []).map(mapLabel)))
   } catch (err) {
     console.error('FDA search error:', err.message)
     res.json([])
