@@ -3,7 +3,13 @@ import { useNavigate, Link } from 'react-router-dom'
 import styles from './Home.module.css'
 import FloatingPills from '../components/FloatingPills'
 
-const PILLS = ['Adderall', 'Zoloft', 'Ibuprofen', 'Melatonin', 'Ozempic', 'Xanax']
+const CATEGORIES = [
+  { label: 'Pain & Fever',            drugs: ['Ibuprofen', 'Acetaminophen', 'Aspirin', 'Naproxen', 'Tramadol'] },
+  { label: 'Mental Health',           drugs: ['Adderall', 'Zoloft', 'Xanax', 'Lexapro', 'Prozac', 'Wellbutrin', 'Vyvanse', 'Klonopin'] },
+  { label: 'Sleep & Supplements',     drugs: ['Melatonin', 'Magnesium', 'Vitamin D', 'Zinc', 'Benadryl'] },
+  { label: 'Chronic & Metabolic',     drugs: ['Ozempic', 'Metformin', 'Lisinopril', 'Atorvastatin', 'Levothyroxine', 'Omeprazole'] },
+  { label: 'Antibiotics & Antivirals',drugs: ['Amoxicillin', 'Azithromycin', 'Doxycycline', 'Tamiflu'] },
+]
 
 
 const FEATURES = [
@@ -73,15 +79,22 @@ function Home() {
             </button>
           </form>
 
-          <div className={styles.pillRow}>
-            {PILLS.map(pill => (
-              <button
-                key={pill}
-                className={styles.pill}
-                onClick={() => handlePillClick(pill)}
-              >
-                {pill}
-              </button>
+          <div className={styles.categories}>
+            {CATEGORIES.map(({ label, drugs }) => (
+              <div key={label} className={styles.category}>
+                <span className={styles.categoryLabel}>{label}</span>
+                <div className={styles.pillRow}>
+                  {drugs.map(drug => (
+                    <button
+                      key={drug}
+                      className={styles.pill}
+                      onClick={() => handlePillClick(drug)}
+                    >
+                      {drug}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

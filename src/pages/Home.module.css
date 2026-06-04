@@ -12,10 +12,19 @@
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  padding: 80px 20px;
+  padding: 72px 24px 80px;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    /* desktop: 56px navbar + 60px so the large clamp heading is never clipped */
+    padding: 116px 40px 80px;
+    justify-content: center;
+  }
 }
 
 .glow {
@@ -38,7 +47,7 @@
   align-items: center;
   text-align: center;
   width: 100%;
-  max-width: 640px;
+  max-width: 900px;
   gap: 20px;
 }
 
@@ -75,7 +84,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
 }
 
 .searchInput {
@@ -116,19 +125,43 @@
   transform: scale(0.98);
 }
 
-/* ── Suggestion pills ── */
-.pillRow {
+/* ── Categorised suggestions ── */
+.categories {
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-direction: column;
+  gap: 0;
   width: 100%;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
-.pillRow::-webkit-scrollbar {
-  display: none;
+.category {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.category:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.categoryLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray);
+  opacity: 0.5;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 22px;
 }
 
 .pill {
@@ -138,7 +171,7 @@
   color: var(--gray);
   font-size: 0.8rem;
   font-weight: 500;
-  padding: 6px 14px;
+  padding: 7px 18px;
   border-radius: 999px;
   transition: color 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
