@@ -89,11 +89,9 @@ function Home() {
   const [news, setNews]         = useState([])
   const [newsLoading, setNewsLoading] = useState(true)
 
-  const MED_WORDS = /drug|medication|medicine|fda|pill|prescription|treatment|vaccine|therapy|dose/i
-
   useEffect(() => {
     axios.get(`${API}/api/news`)
-      .then(({ data }) => setNews(data.filter(a => MED_WORDS.test(a.title))))
+      .then(({ data }) => setNews(data))
       .catch(() => setNews([]))
       .finally(() => setNewsLoading(false))
   }, [])
