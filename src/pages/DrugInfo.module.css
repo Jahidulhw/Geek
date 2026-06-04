@@ -1,0 +1,259 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+.back {
+  font-size: 0.85rem;
+  color: var(--gray);
+  margin-bottom: 24px;
+  transition: color 0.15s ease;
+  display: inline-block;
+}
+
+.back:hover { color: var(--white); }
+
+/* ── Header ── */
+.header {
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.name {
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--white);
+}
+
+.generic {
+  font-size: 0.88rem;
+  color: var(--gray);
+  margin-top: 5px;
+  text-transform: lowercase;
+}
+
+.addBtn {
+  flex-shrink: 0;
+  background: var(--red);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.addBtn:hover  { opacity: 0.85; }
+.addBtn:active { transform: scale(0.97); }
+
+.mfrTag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--red);
+  background: rgba(254, 44, 85, 0.1);
+  border: 1px solid rgba(254, 44, 85, 0.2);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ── Sections ── */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  gap: 12px;
+  transition: background 0.15s ease;
+}
+
+.sectionHeader:hover { background: var(--surface2); }
+
+.sectionLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.sectionLabel {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.chevron {
+  font-size: 0.9rem;
+  color: var(--gray);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronOpen { transform: rotate(180deg); }
+
+/* ── Section body ── */
+.sectionBody {
+  border-top: 1px solid var(--border);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Plain-English (AI) text — primary */
+.plainText {
+  font-size: 0.95rem;
+  color: var(--white);
+  line-height: 1.7;
+}
+
+/* Explanation loading skeleton */
+.explSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skLine   { height: 13px; }
+.skW80    { width: 80%; }
+.skW60    { width: 60%; }
+
+/* Retry button — shown when no API key */
+.retryBtn {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.retryBtn:hover:not(:disabled) {
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.retryBtn:disabled { opacity: 0.5; cursor: default; }
+
+.retryError {
+  font-size: 0.8rem;
+  color: var(--gray);
+  opacity: 0.7;
+}
+
+.retryError code {
+  font-family: monospace;
+  color: var(--red);
+  font-size: 0.78rem;
+}
+
+/* Raw label toggle */
+.rawToggle {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  color: var(--gray);
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.rawToggle:hover { opacity: 1; }
+
+.rawText {
+  font-size: 0.8rem;
+  color: var(--gray);
+  line-height: 1.65;
+  white-space: pre-line;
+  opacity: 0.7;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+/* ── Error state ── */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.errorTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.backBtn {
+  font-size: 0.85rem;
+  color: var(--red);
+  transition: opacity 0.15s ease;
+}
+
+.backBtn:hover { opacity: 0.8; }
+
+/* ── Skeletons ── */
+.skPulse {
+  background: var(--surface2);
+  border-radius: 8px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1;    }
+  50%       { opacity: 0.35; }
+}
+
+.skHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.skName    { height: 44px; width: 55%; }
+.skGeneric { height: 16px; width: 35%; }
+.skTag     { height: 22px; width: 140px; border-radius: 999px; }
+
+.skSection {
+  height: 56px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+}

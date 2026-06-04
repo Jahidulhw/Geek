@@ -1,0 +1,291 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.dot {
+  color: var(--red);
+}
+
+.sub {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+
+/* ── Search ── */
+.searchWrap {
+  position: relative;
+}
+
+.inputRow {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 44px 13px 16px;
+  font-size: 0.95rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--gray);
+}
+
+.input:focus {
+  border-color: var(--red);
+}
+
+.input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spinner {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ── Dropdown ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  list-style: none;
+  overflow: hidden;
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.suggestion:hover {
+  background: var(--surface2);
+}
+
+.suggestion + .suggestion {
+  border-top: 1px solid var(--border);
+}
+
+.suggName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--white);
+}
+
+.suggGeneric {
+  font-size: 0.78rem;
+  color: var(--gray);
+  flex-shrink: 0;
+}
+
+/* ── Pill tags ── */
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--white);
+}
+
+.pillRemove {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--gray);
+  transition: color 0.1s ease;
+  padding: 0 2px;
+}
+
+.pillRemove:hover {
+  color: var(--red);
+}
+
+/* ── Hint ── */
+.hint {
+  font-size: 0.82rem;
+  color: var(--gray);
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* ── Check button ── */
+.checkBtn {
+  background: var(--red);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  width: 100%;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.checkBtn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.checkBtn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.checkBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Results ── */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resultsLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 4px;
+}
+
+.noResults {
+  font-size: 0.9rem;
+  color: var(--gray);
+  text-align: center;
+  padding: 32px 0;
+}
+
+/* ── Interaction card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease;
+}
+
+.card_severe   { border-color: rgba(254, 44, 85,  0.35); }
+.card_moderate { border-color: rgba(255, 190, 0,  0.3);  }
+.card_mild     { border-color: var(--border);             }
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.drugPair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.drugName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.plus {
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
+/* ── Severity badge ── */
+.badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.badge_severe {
+  background: rgba(254, 44, 85, 0.15);
+  border: 1px solid rgba(254, 44, 85, 0.4);
+  color: #ff5577;
+}
+
+.badge_moderate {
+  background: rgba(255, 190, 0, 0.12);
+  border: 1px solid rgba(255, 190, 0, 0.35);
+  color: #ffc107;
+}
+
+.badge_mild {
+  background: rgba(102, 102, 102, 0.2);
+  border: 1px solid rgba(102, 102, 102, 0.4);
+  color: var(--gray);
+}
+
+.description {
+  font-size: 0.86rem;
+  color: var(--gray);
+  line-height: 1.6;
+}

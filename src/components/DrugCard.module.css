@@ -1,0 +1,72 @@
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--surface2);
+}
+
+.icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.generic {
+  font-size: 0.78rem;
+  color: var(--gray);
+}
+
+.purpose {
+  font-size: 0.82rem;
+  color: var(--gray);
+  line-height: 1.45;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+.mfr {
+  font-size: 0.7rem;
+  color: var(--red);
+  font-weight: 500;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.arrow {
+  font-size: 1rem;
+  color: var(--gray);
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+  margin-top: 2px;
+}
+
+.card:hover .arrow {
+  color: var(--white);
+  transform: translateX(3px);
+}

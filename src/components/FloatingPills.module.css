@@ -1,0 +1,13 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pill {
+  position: absolute;
+  will-change: transform;
+  /* visual detail lives entirely inside the SVG children */
+}
