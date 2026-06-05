@@ -9,6 +9,7 @@ import explainRouter from './routes/explain.js'
 import authRouter from './routes/auth.js'
 import medsRouter from './routes/meds.js'
 import newsRouter from './routes/news.js'
+import chatRouter from './routes/chat.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -24,6 +25,7 @@ app.use('/api/explain', explainRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/meds', medsRouter)
 app.use('/api/news', newsRouter)
+app.use('/api/chat', chatRouter)
 
 app.use(express.static(path.join(__dirname, '../dist')))
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../dist/index.html')))

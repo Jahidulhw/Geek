@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom'
 import styles from './Navbar.module.css'
 import { useAuth } from '../contexts/AuthContext'
 import AuthModal from './AuthModal'
+import AiChatDrawer from './AiChat'
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -16,10 +17,10 @@ function IconHamburger() {
   )
 }
 
-function IconBookmark() {
+function IconChat() {
   return (
-    <svg width="16" height="20" viewBox="0 0 16 20" fill="none" aria-hidden="true">
-      <path d="M1 1h14v18l-7-4.5L1 19V1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 2C5.582 2 2 5.134 2 9c0 1.9.83 3.62 2.18 4.9L3 18l4.5-1.8C8.26 16.38 9.11 16.5 10 16.5c4.418 0 8-3.134 8-7s-3.582-7.5-8-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -122,6 +123,7 @@ function UserButton({ onOpenModal }) {
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen]   = useState(false)
   const [authModalOpen, setAuthModal] = useState(false)
+  const [chatOpen, setChatOpen]       = useState(false)
 
   return (
     <>
@@ -143,9 +145,13 @@ export default function Navbar() {
 
           {/* Right */}
           <div className={`${styles.side} ${styles.sideRight}`}>
-            <Link to="/saved" className={`${styles.iconBtn} ${styles.desktopOnly}`} aria-label="Saved">
-              <IconBookmark />
-            </Link>
+            <button
+              className={`${styles.iconBtn} ${styles.desktopOnly}`}
+              onClick={() => setChatOpen(true)}
+              aria-label="Open AI chat"
+            >
+              <IconChat />
+            </button>
 
             <UserButton onOpenModal={() => setAuthModal(true)} />
 
@@ -158,6 +164,7 @@ export default function Navbar() {
       </header>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <AiChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
       {authModalOpen && <AuthModal onClose={() => setAuthModal(false)} />}
     </>
   )
