@@ -1,7 +1,68 @@
-.canvas {
+/* ── Fixed background layer ── */
+.layer {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  display: block;
+  overflow: hidden;
+}
+
+/* ── Per-pill outer wrapper — holds brightness ceiling + blur ── */
+.pillWrap {
+  position: absolute;
+  top: 0;
+}
+
+/* ── Inner animated element ── */
+.pillAnim {
+  will-change: transform, opacity;
+}
+
+/* ── Assign keyframe per drift variant ── */
+.driftA { animation: driftA linear infinite; }
+.driftB { animation: driftB linear infinite; }
+.driftC { animation: driftC linear infinite; }
+.driftD { animation: driftD linear infinite; }
+
+/*
+ * Each keyframe floats the pill from 110vh below the viewport to 15vh above it.
+ * Opacity: 0 → 1 over the first 10%, holds 1 until 90%, then 0 → over the last 10%.
+ * The outer wrapper's opacity multiplies this, so max visible brightness = wrapper.op.
+ * Horizontal drift and rotation give each path a distinct character.
+ */
+
+@keyframes driftA {
+  0%   { transform: translateY(110vh) translateX(0px)   rotate(-20deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-15vh) translateX(38px)  rotate(-14deg); opacity: 0; }
+}
+
+@keyframes driftB {
+  0%   { transform: translateY(110vh) translateX(0px)   rotate(18deg);  opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-15vh) translateX(-44px) rotate(12deg);  opacity: 0; }
+}
+
+@keyframes driftC {
+  0%   { transform: translateY(110vh) translateX(0px)   rotate(38deg);  opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-15vh) translateX(24px)  rotate(32deg);  opacity: 0; }
+}
+
+@keyframes driftD {
+  0%   { transform: translateY(110vh) translateX(0px)   rotate(-44deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-15vh) translateX(-28px) rotate(-37deg); opacity: 0; }
+}
+
+/* ── Respect prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .pillAnim {
+    animation: none !important;
+    opacity: 0 !important;
+  }
 }
