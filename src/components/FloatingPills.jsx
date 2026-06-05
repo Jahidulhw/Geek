@@ -1,146 +1,147 @@
+import { useEffect, useRef } from 'react'
 import styles from './FloatingPills.module.css'
 
-// ── SVG building blocks ──────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
-function CapsuleSvg({ w, h, c1, c2, uid }) {
-  const r = h / 2
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id={`fp-cg-${uid}`} x1="0" x2="1" y1="0" y2="0">
-          <stop offset="50%" stopColor={c1} />
-          <stop offset="50%" stopColor={c2} />
-        </linearGradient>
-        <linearGradient id={`fp-ch-${uid}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.22)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)"    />
-        </linearGradient>
-      </defs>
-      <rect x="0.5" y="0.5" width={w - 1} height={h - 1} rx={r} fill={`url(#fp-cg-${uid})`} />
-      <line
-        x1={w / 2} y1={r * 0.25}
-        x2={w / 2} y2={h - r * 0.25}
-        stroke="rgba(0,0,0,0.35)"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-      />
-      <rect
-        x={r * 1.2}
-        y={h * 0.11}
-        width={Math.max(0, w - r * 2.4)}
-        height={h * 0.28}
-        rx={h * 0.12}
-        fill={`url(#fp-ch-${uid})`}
-      />
-    </svg>
-  )
+const CFG = {
+  count:      75,    // particle count
+  connDist:   150,   // px — max distance at which two particles connect
+  speed:      0.28,  // max px per frame (~17 px/s at 60 fps)
+  dotOpacity: 0.30,  // particle fill opacity
+  lineMax:    0.13,  // max line opacity (particles at distance 0)
+  redRatio:   0.30,  // fraction of particles that use the red accent
+  minR:       1.2,   // min dot radius px
+  maxR:       2.4,   // max dot radius px
 }
 
-function TabletSvg({ size: s, c1, c2, uid }) {
-  const cx = s / 2
-  const cy = s / 2
-  const r  = s / 2 - 0.5
-  return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id={`fp-tg-${uid}`} cx="38%" cy="32%" r="68%" gradientUnits="userSpaceOnUse"
-          x1="0" y1="0" x2={s} y2={s}>
-          <stop offset="0%"   stopColor={c1} />
-          <stop offset="100%" stopColor={c2} />
-        </radialGradient>
-        <radialGradient id={`fp-th-${uid}`} cx="50%" cy="28%" r="52%">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.18)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)"    />
-        </radialGradient>
-      </defs>
-      <circle cx={cx} cy={cy} r={r} fill={`url(#fp-tg-${uid})`} />
-      <line
-        x1={s * 0.20} y1={cy}
-        x2={s * 0.80} y2={cy}
-        stroke="rgba(0,0,0,0.30)"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-      />
-      <circle cx={cx} cy={cy} r={r} fill={`url(#fp-th-${uid})`} />
-    </svg>
-  )
+const CONN_SQ  = CFG.connDist * CFG.connDist  // avoid sqrt in hot loop
+const RED      = '#e8455a'
+const WHITE    = '#ffffff'
+
+// ── Particle factory ──────────────────────────────────────────────────────────
+
+function mkParticle(w, h) {
+  const angle = Math.random() * Math.PI * 2
+  const spd   = CFG.speed * (0.35 + Math.random() * 0.65)
+  return {
+    x:   Math.random() * w,
+    y:   Math.random() * h,
+    vx:  Math.cos(angle) * spd,
+    vy:  Math.sin(angle) * spd,
+    r:   CFG.minR + Math.random() * (CFG.maxR - CFG.minR),
+    red: Math.random() < CFG.redRatio,
+  }
 }
-
-// ── Pill config ───────────────────────────────────────────────────────────────
-// drift: 0–3 maps to driftA–driftD keyframe classes
-// dur: animation duration in seconds
-// delay: negative = start mid-cycle so pills are already in flight on load
-// op: brightness ceiling — keyframe fades 0→1→0 against this value
-
-const D1 = '#6B0F1A'   // deep crimson
-const D2 = '#3D0009'   // near-black
-const M1 = '#8B1A2A'   // maroon
-const M2 = '#4A0010'   // dark maroon
-const C1 = '#900A20'   // bright crimson
-const C2 = '#580A16'   // dark crimson
-
-const DRIFT = ['driftA', 'driftB', 'driftC', 'driftD']
-
-const PILLS = [
-  // ── capsules ────────────────────────────────────────────────
-  { left:  4, w:  88, h: 30, shape: 'capsule', c1: D1, c2: D2, drift: 0, dur: 22, delay:   0, op: 0.10, blur: 0 },
-  { left: 14, w: 128, h: 44, shape: 'capsule', c1: M1, c2: M2, drift: 1, dur: 18, delay:  -5, op: 0.07, blur: 1 },
-  { left: 22, w:  60, h: 22, shape: 'capsule', c1: C1, c2: C2, drift: 2, dur: 26, delay: -10, op: 0.08, blur: 0 },
-  { left: 34, w: 108, h: 38, shape: 'capsule', c1: D1, c2: D2, drift: 3, dur: 20, delay:  -3, op: 0.09, blur: 0 },
-  { left: 44, w:  70, h: 26, shape: 'capsule', c1: M1, c2: M2, drift: 0, dur: 16, delay:  -8, op: 0.06, blur: 2 },
-  { left: 54, w:  98, h: 34, shape: 'capsule', c1: C1, c2: C2, drift: 1, dur: 24, delay: -15, op: 0.10, blur: 0 },
-  { left: 64, w:  78, h: 28, shape: 'capsule', c1: D1, c2: D2, drift: 2, dur: 19, delay:  -2, op: 0.07, blur: 1 },
-  { left: 74, w: 118, h: 42, shape: 'capsule', c1: M1, c2: M2, drift: 3, dur: 27, delay: -12, op: 0.08, blur: 0 },
-  { left: 84, w:  52, h: 20, shape: 'capsule', c1: C1, c2: C2, drift: 0, dur: 21, delay:  -6, op: 0.09, blur: 0 },
-  { left: 93, w:  92, h: 32, shape: 'capsule', c1: D1, c2: D2, drift: 1, dur: 17, delay:  -9, op: 0.06, blur: 2 },
-  // ── tablets ─────────────────────────────────────────────────
-  { left:  9, w:  38, h: 38, shape: 'tablet',  c1: M1, c2: M2, drift: 2, dur: 25, delay:  -4, op: 0.07, blur: 1 },
-  { left: 28, w:  50, h: 50, shape: 'tablet',  c1: C1, c2: C2, drift: 3, dur: 20, delay: -11, op: 0.05, blur: 2 },
-  { left: 39, w:  30, h: 30, shape: 'tablet',  c1: D1, c2: D2, drift: 0, dur: 29, delay:  -7, op: 0.08, blur: 0 },
-  { left: 49, w:  44, h: 44, shape: 'tablet',  c1: M1, c2: M2, drift: 1, dur: 15, delay: -13, op: 0.06, blur: 1 },
-  { left: 61, w:  36, h: 36, shape: 'tablet',  c1: C1, c2: C2, drift: 2, dur: 23, delay:  -1, op: 0.09, blur: 0 },
-  { left: 77, w:  54, h: 54, shape: 'tablet',  c1: D1, c2: D2, drift: 3, dur: 18, delay: -16, op: 0.05, blur: 2 },
-  { left: 87, w:  32, h: 32, shape: 'tablet',  c1: M1, c2: M2, drift: 0, dur: 28, delay:  -5, op: 0.07, blur: 0 },
-  { left: 97, w:  42, h: 42, shape: 'tablet',  c1: C1, c2: C2, drift: 1, dur: 14, delay:  -9, op: 0.06, blur: 1 },
-]
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FloatingPills() {
+  const canvasRef = useRef(null)
+
   const reduced =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  useEffect(() => {
+    if (reduced) return
+
+    const canvas = canvasRef.current
+    const ctx    = canvas.getContext('2d')
+
+    let w, h
+    let particles = []
+    let rafId
+
+    // ── Size canvas to fill viewport ────────────────────────────────────────
+
+    function resize() {
+      w = canvas.width  = window.innerWidth
+      h = canvas.height = window.innerHeight
+    }
+
+    // ── Build initial particle set ──────────────────────────────────────────
+
+    function init() {
+      resize()
+      particles = Array.from({ length: CFG.count }, () => mkParticle(w, h))
+    }
+
+    // ── Draw + move one frame ───────────────────────────────────────────────
+
+    function tick() {
+      ctx.clearRect(0, 0, w, h)
+
+      // ── Connection lines ─────────────────────────────────────────────────
+      ctx.lineWidth = 0.6
+
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i]
+        for (let j = i + 1; j < particles.length; j++) {
+          const b  = particles[j]
+          const dx = a.x - b.x
+          const dy = a.y - b.y
+          const d2 = dx * dx + dy * dy
+          if (d2 >= CONN_SQ) continue
+
+          // Opacity falls off linearly from lineMax at d=0 to 0 at d=connDist
+          ctx.globalAlpha = (1 - d2 / CONN_SQ) * CFG.lineMax
+          // Tint the line red when either endpoint is a red particle
+          ctx.strokeStyle = (a.red || b.red) ? RED : WHITE
+          ctx.beginPath()
+          ctx.moveTo(a.x, a.y)
+          ctx.lineTo(b.x, b.y)
+          ctx.stroke()
+        }
+      }
+
+      // ── Dots ─────────────────────────────────────────────────────────────
+      ctx.globalAlpha = CFG.dotOpacity
+
+      for (const p of particles) {
+        ctx.fillStyle = p.red ? RED : WHITE
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Restore default alpha for next frame
+      ctx.globalAlpha = 1
+
+      // ── Move particles (wrap at edges with a small margin) ────────────────
+      for (const p of particles) {
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < -12)    p.x = w + 12
+        if (p.x > w + 12) p.x = -12
+        if (p.y < -12)    p.y = h + 12
+        if (p.y > h + 12) p.y = -12
+      }
+
+      rafId = requestAnimationFrame(tick)
+    }
+
+    // ── Resize handler — keep canvas full-viewport ──────────────────────────
+
+    function onResize() {
+      resize()
+      // Clamp any particles that are now outside the new bounds
+      for (const p of particles) {
+        if (p.x > w) p.x = Math.random() * w
+        if (p.y > h) p.y = Math.random() * h
+      }
+    }
+
+    init()
+    tick()
+
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [reduced])
+
   if (reduced) return null
 
-  return (
-    <div className={styles.layer} aria-hidden="true">
-      {PILLS.map((c, i) => (
-        // Outer wrapper: sets per-pill brightness ceiling + blur
-        <div
-          key={i}
-          className={styles.pillWrap}
-          style={{
-            left:    `${c.left}%`,
-            opacity: c.op,
-            filter:  c.blur ? `blur(${c.blur}px)` : undefined,
-          }}
-        >
-          {/* Inner animated element: keyframe floats it up and fades 0→1→0 */}
-          <div
-            className={`${styles.pillAnim} ${styles[DRIFT[c.drift]]}`}
-            style={{
-              animationDuration: `${c.dur}s`,
-              animationDelay:    `${c.delay}s`,
-            }}
-          >
-            {c.shape === 'tablet'
-              ? <TabletSvg  size={c.w} c1={c.c1} c2={c.c2} uid={i} />
-              : <CapsuleSvg w={c.w}   h={c.h}   c1={c.c1} c2={c.c2} uid={i} />
-            }
-          </div>
-        </div>
-      ))}
-    </div>
-  )
+  return <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
 }
