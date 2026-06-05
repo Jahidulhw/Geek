@@ -159,6 +159,45 @@
 
 .chevronOpen { transform: rotate(180deg); }
 
+/* ── Severity badge ── */
+.severityBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.severityMild {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.severityModerate {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+.severitySevere {
+  background: rgba(254, 44, 85, 0.12);
+  color: #FE2C55;
+  border: 1px solid rgba(254, 44, 85, 0.25);
+}
+
+.severitySkeleton {
+  display: inline-block;
+  width: 52px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--surface2);
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
 /* ── Section body ── */
 .sectionBody {
   border-top: 1px solid var(--border);

@@ -135,6 +135,27 @@ router.post('/batch', async (req, res) => {
   }
 })
 
+// ── Severity ──────────────────────────────────────────────────────────────────
+
+router.post('/severity', async (req, res) => {
+  const { sideEffectsText } = req.body
+  if (!sideEffectsText) return res.status(400).json({ error: 'sideEffectsText required' })
+
+  const hasKey = process.env.GROQ_API_KEY || process.env.ANTHROPIC_API_KEY
+  if (!hasKey) return res.json({ severity: null })
+
+  const prompt = `Classify the overall severity of these drug side effects as exactly one word — either Mild, Moderate, or Severe. Reply with ONLY that single word, nothing else.\n\nSide effects: ${sideEffectsText.slice(0, 500)}`
+
+  try {
+    const text     = await callAI(prompt, 20)
+    const severity = ['Mild', 'Moderate', 'Severe'].find(s => text.includes(s)) ?? null
+    res.json({ severity })
+  } catch (err) {
+    console.error('Severity error:', err.message)
+    res.json({ severity: null })
+  }
+})
+
 // ── Single ────────────────────────────────────────────────────────────────────
 
 router.post('/', async (req, res) => {

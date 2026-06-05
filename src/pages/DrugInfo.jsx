@@ -16,7 +16,9 @@ const SECTIONS = [
   { key: 'interactions', label: 'Drug interactions',  emoji: '🔄' },
 ]
 
-function Section({ label, emoji, content, explanation, loadingExpl, defaultOpen }) {
+const SEVERITY_COLOR = { Mild: styles.severityMild, Moderate: styles.severityModerate, Severe: styles.severitySevere }
+
+function Section({ label, emoji, content, explanation, loadingExpl, defaultOpen, severity, loadingSeverity }) {
   const [open, setOpen]       = useState(defaultOpen)
   const [showRaw, setShowRaw] = useState(false)
 
@@ -32,6 +34,14 @@ function Section({ label, emoji, content, explanation, loadingExpl, defaultOpen 
         <div className={styles.sectionLeft}>
           <span className={styles.emoji}>{emoji}</span>
           <span className={styles.sectionLabel}>{label}</span>
+          {!loadingExpl && loadingSeverity && (
+            <span className={styles.severitySkeleton} />
+          )}
+          {!loadingExpl && severity && !loadingSeverity && (
+            <span className={`${styles.severityBadge} ${SEVERITY_COLOR[severity] ?? ''}`}>
+              {severity}
+            </span>
+          )}
         </div>
         <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}>▾</span>
       </button>
@@ -87,8 +97,10 @@ function DrugInfo() {
   const [drug, setDrug]             = useState(null)
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState(null)
-  const [explanations, setExplanations] = useState({})
-  const [loadingExpl, setLoadingExpl]   = useState(false)
+  const [explanations, setExplanations]     = useState({})
+  const [loadingExpl, setLoadingExpl]       = useState(false)
+  const [severity, setSeverity]             = useState(null)
+  const [loadingSeverity, setLoadingSeverity] = useState(false)
   const [savingMed, setSavingMed]         = useState(false)
   const [saveError, setSaveError]         = useState(null)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -97,6 +109,7 @@ function DrugInfo() {
     setLoading(true)
     setError(null)
     setExplanations({})
+    setSeverity(null)
 
     axios.get(`${API}/api/drugs/${encodeURIComponent(id)}`)
       .then(({ data }) => {
@@ -111,7 +124,17 @@ function DrugInfo() {
         setLoadingExpl(true)
         axios
           .post(`${API}/api/explain/batch`, { sections: toExplain, drugName: data.brandName })
-          .then(({ data: expl }) => setExplanations(expl))
+          .then(({ data: expl }) => {
+            setExplanations(expl)
+            if (expl.sideEffects) {
+              setLoadingSeverity(true)
+              axios
+                .post(`${API}/api/explain/severity`, { sideEffectsText: expl.sideEffects })
+                .then(({ data }) => setSeverity(data.severity))
+                .catch(() => {})
+                .finally(() => setLoadingSeverity(false))
+            }
+          })
           .catch(err => {
             console.error('Batch explain failed:', err.message)
             // On failure, show cleaned raw text for each section
@@ -200,6 +223,8 @@ function DrugInfo() {
             explanation={explanations[key] ?? null}
             loadingExpl={loadingExpl}
             defaultOpen={i === 0}
+            severity={key === 'sideEffects' ? severity : null}
+            loadingSeverity={key === 'sideEffects' ? loadingSeverity : false}
           />
         ))}
       </div>
