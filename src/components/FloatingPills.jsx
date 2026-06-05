@@ -1,157 +1,100 @@
 import { useEffect, useRef } from 'react'
 import styles from './FloatingPills.module.css'
 
-// ── Layer definitions ─────────────────────────────────────────────────────────
-//   blur     : CSS px blur applied to every pill in this layer
-//   opacity  : globalAlpha for the layer
-//   wRange   : [min, max] pill width  (capsule) / diameter (tablet)  in px
-//   hRange   : [min, max] pill height (capsule only)                 in px
-//   speed    : max drift velocity, px/frame
-//   rotSpeed : max |rotational velocity|, rad/frame
-//   parallax : fraction of mouse-offset applied as opposite translation
+// ── SVG shapes ────────────────────────────────────────────────────────────────
 
-const LAYERS = [
-  { count: 12, blur: 4, opacity: 0.20, wRange: [18, 44],  hRange: [7,  16], speed: 0.14, rotSpeed: 0.0020, parallax: 0.012 },
-  { count:  9, blur: 1, opacity: 0.35, wRange: [44, 82],  hRange: [15, 28], speed: 0.26, rotSpeed: 0.0040, parallax: 0.028 },
-  { count:  5, blur: 0, opacity: 0.50, wRange: [82, 132], hRange: [28, 44], speed: 0.40, rotSpeed: 0.0060, parallax: 0.055 },
-]
-
-// ── Colour palette — dark crimson / maroon ────────────────────────────────────
-//   Each entry is [c1 (lighter half), c2 (darker half)]
-
-const PALETTE = [
-  ['#7A0818', '#3D0009'],
-  ['#8B1A2A', '#4A0010'],
-  ['#900A20', '#580A16'],
-  ['#6B0F1A', '#3A0008'],
-  ['#A01828', '#5D0B15'],
-]
-
-// 30 % of pills are round tablets; the rest are capsules
-const TABLET_RATIO = 0.30
-
-// Mouse-smoothing lerp factor — higher = snappier
-const MOUSE_LERP = 0.07
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function rand(a, b) { return a + Math.random() * (b - a) }
-function pick(arr)  { return arr[Math.floor(Math.random() * arr.length)] }
-
-// Portable rounded-rect path — works without ctx.roundRect (older Safari)
-function rrPath(ctx, x, y, w, h, r) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y,     x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x,     y + h, r)
-  ctx.arcTo(x,     y + h, x,     y,     r)
-  ctx.arcTo(x,     y,     x + w, y,     r)
-  ctx.closePath()
-}
-
-// ── Particle factory ──────────────────────────────────────────────────────────
-
-function mkPill(li, w, h) {
-  const cfg    = LAYERS[li]
-  const isTab  = Math.random() < TABLET_RATIO
-  const colors = pick(PALETTE)
-  const angle  = Math.random() * Math.PI * 2
-  const spd    = cfg.speed * rand(0.35, 1.0)
-  const pw     = rand(...cfg.wRange)
-  const ph     = isTab ? pw : rand(...cfg.hRange)
-
-  return {
-    x:    rand(-pw, w + pw),     // spread across full viewport incl. off-screen
-    y:    rand(-ph, h + ph),
-    vx:   Math.cos(angle) * spd,
-    vy:   Math.sin(angle) * spd,
-    w:    pw,
-    h:    ph,
-    rot:  rand(0, Math.PI * 2),
-    rotV: (Math.random() < 0.5 ? 1 : -1) * rand(cfg.rotSpeed * 0.3, cfg.rotSpeed),
-    c1:   colors[0],
-    c2:   colors[1],
-    tab:  isTab,
-  }
-}
-
-// ── Shape drawers (called with ctx already translated + rotated to pill centre) ─
-
-function drawCapsule(ctx, w, h, c1, c2, detailed) {
+function CapsuleSvg({ w, h, c1, c2, uid }) {
   const r = h / 2
-
-  if (detailed) {
-    // Two-tone split with a vertical seam — front layer only
-    ctx.save()
-    rrPath(ctx, -w / 2, -h / 2, w, h, r)
-    ctx.clip()
-
-    ctx.fillStyle = c1
-    ctx.fillRect(-w / 2, -h / 2, w / 2, h)  // left half
-    ctx.fillStyle = c2
-    ctx.fillRect(0,      -h / 2, w / 2, h)  // right half
-
-    // Seam line
-    ctx.strokeStyle = 'rgba(0,0,0,0.22)'
-    ctx.lineWidth   = 0.9
-    ctx.beginPath()
-    ctx.moveTo(0, -h / 2 + r * 0.4)
-    ctx.lineTo(0,  h / 2 - r * 0.4)
-    ctx.stroke()
-
-    // Subtle top highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.06)'
-    ctx.fillRect(-w / 2, -h / 2, w, h * 0.38)
-
-    ctx.restore()
-  } else {
-    // Solid fill — detail invisible through blur
-    rrPath(ctx, -w / 2, -h / 2, w, h, r)
-    ctx.fillStyle = c1
-    ctx.fill()
-  }
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
+      <defs>
+        <linearGradient id={`cg-${uid}`} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="50%" stopColor={c1} />
+          <stop offset="50%" stopColor={c2} />
+        </linearGradient>
+        <linearGradient id={`ch-${uid}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.20)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)"    />
+        </linearGradient>
+      </defs>
+      <rect x="0.5" y="0.5" width={w - 1} height={h - 1} rx={r}
+        fill={`url(#cg-${uid})`} />
+      <line
+        x1={w / 2} y1={r * 0.3}
+        x2={w / 2} y2={h - r * 0.3}
+        stroke="rgba(0,0,0,0.28)" strokeWidth="0.8" strokeLinecap="round"
+      />
+      <rect
+        x={r * 1.2} y={h * 0.1}
+        width={Math.max(0, w - r * 2.4)} height={h * 0.28}
+        rx={h * 0.12} fill={`url(#ch-${uid})`}
+      />
+    </svg>
+  )
 }
 
-function drawTablet(ctx, w, c1, c2, detailed) {
-  const r = w / 2  // w == h for tablets
-
-  if (detailed) {
-    ctx.save()
-    ctx.beginPath()
-    ctx.arc(0, 0, r, 0, Math.PI * 2)
-    ctx.clip()
-
-    ctx.fillStyle = c1
-    ctx.fillRect(-r, -r, r, r * 2)  // left half
-    ctx.fillStyle = c2
-    ctx.fillRect(0,  -r, r, r * 2)  // right half
-
-    // Vertical score line
-    ctx.strokeStyle = 'rgba(0,0,0,0.20)'
-    ctx.lineWidth   = 0.9
-    ctx.beginPath()
-    ctx.moveTo(0, -r * 0.65)
-    ctx.lineTo(0,  r * 0.65)
-    ctx.stroke()
-
-    ctx.fillStyle = 'rgba(255,255,255,0.06)'
-    ctx.beginPath()
-    ctx.arc(0, 0, r, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.restore()
-  } else {
-    ctx.beginPath()
-    ctx.arc(0, 0, r, 0, Math.PI * 2)
-    ctx.fillStyle = c1
-    ctx.fill()
-  }
+function TabletSvg({ size: s, c1, c2, uid }) {
+  const cx = s / 2, cy = s / 2, r = s / 2 - 0.5
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+      <defs>
+        <radialGradient id={`tg-${uid}`} cx="38%" cy="32%" r="68%"
+          gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stopColor={c1} />
+          <stop offset="100%" stopColor={c2} />
+        </radialGradient>
+        <radialGradient id={`th-${uid}`} cx="50%" cy="28%" r="52%">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.18)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)"    />
+        </radialGradient>
+      </defs>
+      <circle cx={cx} cy={cy} r={r} fill={`url(#tg-${uid})`} />
+      <line
+        x1={s * 0.22} y1={cy} x2={s * 0.78} y2={cy}
+        stroke="rgba(0,0,0,0.25)" strokeWidth="1" strokeLinecap="round"
+      />
+      <circle cx={cx} cy={cy} r={r} fill={`url(#th-${uid})`} />
+    </svg>
+  )
 }
+
+// ── Pill config ───────────────────────────────────────────────────────────────
+// top/left : initial viewport position (%)
+// rotBase  : resting rotation angle (deg)
+// speed    : translateY px per scrollY px  (negative = scrolling down → moves up)
+// rotSpeed : additional degrees per scrollY px
+
+const D1 = '#6B0F1A', D2 = '#3D0009'
+const M1 = '#8B1A2A', M2 = '#4A0010'
+const C1 = '#900A20', C2 = '#580A16'
+
+const PILLS = [
+  // ── capsules ──────────────────────────────────────────────────────────────
+  { top:  8, left:  5, w:  88, h: 30, shape: 'capsule', c1: D1, c2: D2, rotBase: -22, speed: 0.09, rotSpeed:  0.012, op: 0.10, blur: 0 },
+  { top: 15, left: 87, w: 128, h: 44, shape: 'capsule', c1: M1, c2: M2, rotBase:  18, speed: 0.15, rotSpeed: -0.008, op: 0.07, blur: 1 },
+  { top: 25, left:  2, w:  62, h: 22, shape: 'capsule', c1: C1, c2: C2, rotBase:  42, speed: 0.07, rotSpeed:  0.020, op: 0.08, blur: 0 },
+  { top: 32, left: 74, w: 108, h: 38, shape: 'capsule', c1: D1, c2: D2, rotBase: -35, speed: 0.13, rotSpeed: -0.015, op: 0.09, blur: 0 },
+  { top: 48, left: 12, w:  72, h: 26, shape: 'capsule', c1: M1, c2: M2, rotBase:  25, speed: 0.18, rotSpeed:  0.010, op: 0.07, blur: 1 },
+  { top: 56, left: 60, w:  98, h: 34, shape: 'capsule', c1: C1, c2: C2, rotBase: -15, speed: 0.11, rotSpeed: -0.018, op: 0.10, blur: 0 },
+  { top: 65, left: 30, w:  78, h: 28, shape: 'capsule', c1: D1, c2: D2, rotBase:  38, speed: 0.16, rotSpeed:  0.022, op: 0.07, blur: 1 },
+  { top: 73, left: 89, w: 118, h: 42, shape: 'capsule', c1: M1, c2: M2, rotBase: -28, speed: 0.20, rotSpeed: -0.009, op: 0.08, blur: 0 },
+  { top: 83, left: 47, w:  52, h: 20, shape: 'capsule', c1: C1, c2: C2, rotBase:  10, speed: 0.08, rotSpeed:  0.016, op: 0.09, blur: 0 },
+  { top: 91, left: 22, w:  92, h: 32, shape: 'capsule', c1: D1, c2: D2, rotBase: -42, speed: 0.17, rotSpeed: -0.013, op: 0.06, blur: 2 },
+  { top: 40, left: 44, w:  68, h: 24, shape: 'capsule', c1: M1, c2: M2, rotBase:  55, speed: 0.12, rotSpeed:  0.019, op: 0.08, blur: 0 },
+  { top: 20, left: 37, w:  82, h: 30, shape: 'capsule', c1: C1, c2: C2, rotBase: -50, speed: 0.14, rotSpeed: -0.011, op: 0.07, blur: 1 },
+  // ── tablets ───────────────────────────────────────────────────────────────
+  { top: 12, left: 52, w:  38, h: 38, shape: 'tablet',  c1: M1, c2: M2, rotBase:  14, speed: 0.10, rotSpeed:  0.014, op: 0.07, blur: 1 },
+  { top: 30, left: 19, w:  50, h: 50, shape: 'tablet',  c1: C1, c2: C2, rotBase: -20, speed: 0.18, rotSpeed: -0.021, op: 0.05, blur: 2 },
+  { top: 60, left: 81, w:  32, h: 32, shape: 'tablet',  c1: D1, c2: D2, rotBase:  32, speed: 0.07, rotSpeed:  0.017, op: 0.08, blur: 0 },
+  { top: 46, left: 95, w:  44, h: 44, shape: 'tablet',  c1: M1, c2: M2, rotBase:  -8, speed: 0.21, rotSpeed: -0.025, op: 0.06, blur: 1 },
+  { top: 77, left: 70, w:  36, h: 36, shape: 'tablet',  c1: C1, c2: C2, rotBase:  46, speed: 0.10, rotSpeed:  0.012, op: 0.09, blur: 0 },
+  { top: 87, left:  8, w:  54, h: 54, shape: 'tablet',  c1: D1, c2: D2, rotBase: -36, speed: 0.19, rotSpeed: -0.020, op: 0.05, blur: 2 },
+]
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FloatingPills() {
-  const canvasRef = useRef(null)
+  const refs = useRef([])
 
   const reduced =
     typeof window !== 'undefined' &&
@@ -160,114 +103,58 @@ export default function FloatingPills() {
   useEffect(() => {
     if (reduced) return
 
-    const canvas = canvasRef.current
-    const ctx    = canvas.getContext('2d')
+    let ticking = false
 
-    let w, h
-    let layers = []            // layers[li] = array of pill objects
-    let rafId
-
-    // Smoothed mouse offset from viewport centre
-    let mxTarget = 0, myTarget = 0
-    let mx = 0, my = 0
-
-    // ── Setup ───────────────────────────────────────────────────────────────
-
-    function resize() {
-      w = canvas.width  = window.innerWidth
-      h = canvas.height = window.innerHeight
+    function applyTransforms() {
+      const sy = window.scrollY
+      refs.current.forEach((el, i) => {
+        if (!el) return
+        const p = PILLS[i]
+        const y = -(sy * p.speed)
+        const r =   p.rotBase + sy * p.rotSpeed
+        el.style.transform = `translateY(${y}px) rotate(${r}deg)`
+      })
     }
 
-    function init() {
-      resize()
-      layers = LAYERS.map((_, li) =>
-        Array.from({ length: LAYERS[li].count }, () => mkPill(li, w, h))
-      )
+    function onScroll() {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        applyTransforms()
+        ticking = false
+      })
     }
 
-    // ── Event handlers ───────────────────────────────────────────────────────
+    // Sync to current scroll position on mount (handles page reload mid-scroll)
+    applyTransforms()
 
-    function onMouse(e) {
-      mxTarget = e.clientX - w / 2
-      myTarget = e.clientY - h / 2
-    }
-
-    function onTouch(e) {
-      const t = e.touches[0]
-      if (t) { mxTarget = t.clientX - w / 2; myTarget = t.clientY - h / 2 }
-    }
-
-    function onResize() {
-      resize()
-    }
-
-    // ── Render loop ──────────────────────────────────────────────────────────
-
-    function tick() {
-      ctx.clearRect(0, 0, w, h)
-
-      // Lerp mouse toward target
-      mx += (mxTarget - mx) * MOUSE_LERP
-      my += (myTarget - my) * MOUSE_LERP
-
-      for (let li = 0; li < LAYERS.length; li++) {
-        const cfg      = LAYERS[li]
-        const detailed = (li === 2)            // two-tone only on front layer
-        const ox       = -mx * cfg.parallax   // opposite direction → depth
-        const oy       = -my * cfg.parallax
-
-        ctx.save()
-        if (cfg.blur > 0) ctx.filter  = `blur(${cfg.blur}px)`
-        ctx.globalAlpha = cfg.opacity
-
-        for (const p of layers[li]) {
-          // ── Draw ────────────────────────────────────────────────────────
-          ctx.save()
-          ctx.translate(p.x + ox, p.y + oy)
-          ctx.rotate(p.rot)
-
-          if (p.tab) {
-            drawTablet(ctx, p.w, p.c1, p.c2, detailed)
-          } else {
-            drawCapsule(ctx, p.w, p.h, p.c1, p.c2, detailed)
-          }
-
-          ctx.restore()
-
-          // ── Move ─────────────────────────────────────────────────────────
-          p.x   += p.vx
-          p.y   += p.vy
-          p.rot += p.rotV
-
-          const margin = Math.max(p.w, p.h) + 20
-          if (p.x < -(margin))  p.x = w + margin
-          if (p.x >  w + margin) p.x = -margin
-          if (p.y < -(margin))  p.y = h + margin
-          if (p.y >  h + margin) p.y = -margin
-        }
-
-        ctx.restore()   // restores filter + globalAlpha for this layer
-      }
-
-      rafId = requestAnimationFrame(tick)
-    }
-
-    init()
-    tick()
-
-    window.addEventListener('mousemove', onMouse, { passive: true })
-    window.addEventListener('touchmove', onTouch, { passive: true })
-    window.addEventListener('resize',    onResize, { passive: true })
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('mousemove', onMouse)
-      window.removeEventListener('touchmove', onTouch)
-      window.removeEventListener('resize',    onResize)
-    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [reduced])
 
   if (reduced) return null
 
-  return <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+  return (
+    <div className={styles.layer} aria-hidden="true">
+      {PILLS.map((c, i) => (
+        <div
+          key={i}
+          ref={el => { refs.current[i] = el }}
+          className={styles.pill}
+          style={{
+            top:       `${c.top}%`,
+            left:      `${c.left}%`,
+            opacity:   c.op,
+            filter:    c.blur ? `blur(${c.blur}px)` : undefined,
+            transform: `translateY(0px) rotate(${c.rotBase}deg)`,
+          }}
+        >
+          {c.shape === 'tablet'
+            ? <TabletSvg  size={c.w} c1={c.c1} c2={c.c2} uid={i} />
+            : <CapsuleSvg w={c.w}   h={c.h}   c1={c.c1} c2={c.c2} uid={i} />
+          }
+        </div>
+      ))}
+    </div>
+  )
 }
